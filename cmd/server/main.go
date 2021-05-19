@@ -568,8 +568,11 @@ func (p *Proxy) runMTLSMasterServer(ctx context.Context, o *ProxyRunOptions, s *
 	addr := fmt.Sprintf(":%d", o.serverPort)
 
 	if o.mode == "grpc" {
-		serverOption := grpc.Creds(credentials.NewTLS(tlsConfig))
-		grpcServer := grpc.NewServer(serverOption)
+		serverOptions := []grpc.ServerOption{
+			grpc.Creds(credentials.NewTLS(tlsConfig)),
+			grpc.KeepaliveParams(keepalive.ServerParameters{Time: o.keepaliveTime}),
+		}
+		grpcServer := grpc.NewServer(serverOptions...)
 		client.RegisterProxyServiceServer(grpcServer, s)
 		lis, err := net.Listen("tcp", addr)
 		if err != nil {
